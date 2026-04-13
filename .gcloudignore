@@ -1,0 +1,16 @@
+#!include:.gitignore
+
+src/main/resources/static/images/assets/
+src/test/
+
+.git/
+.github/
+LICENSE
+*.md
+
+env.yml
+env.yaml
+
+application.yml
+application.yaml
+application.properties
