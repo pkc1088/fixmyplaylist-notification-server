@@ -4,5 +4,5 @@ import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
 
 public interface EmailPort {
 
-    void sendRecoveryEmail(RecoveryCompletedEvent event);
+    void sendRecoveryEmail(RecoveryCompletedEvent event) throws Exception;
 }

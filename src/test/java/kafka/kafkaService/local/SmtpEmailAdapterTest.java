@@ -1,6 +1,6 @@
 package kafka.kafkaService.local;
 
-import kafka.kafkaService.email.application.port.in.NotificationUseCase;
+import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +13,14 @@ import java.util.List;
 
 @SpringBootTest
 @TestPropertySource("classpath:application.yml")
-public class EmailAdapterTest {
+public class SmtpEmailAdapterTest {
 
     @Autowired
-    private NotificationUseCase notificationUseCase;
+    private EmailPort emailPort;
 
 
     @Test
-    public void sendEmailTest() {
+    public void sendEmailTest() throws Exception {
         String userId = "112735690496635663877";
         String userName = "pkc1088";
         String userEmail = "pkcmax@naver.com";
@@ -34,7 +34,7 @@ public class EmailAdapterTest {
                 LocalDateTime.now()
         );
 
-        notificationUseCase.processRecoveryNotification(recoveryCompletedEvent);
+        emailPort.sendRecoveryEmail(recoveryCompletedEvent);
     }
 
     private List<RecoveryCompletedEvent.RecoveryDetail> makeSomeRecoveryDetail() {

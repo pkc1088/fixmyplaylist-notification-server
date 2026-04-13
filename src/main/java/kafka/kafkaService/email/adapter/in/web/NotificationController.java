@@ -1,9 +1,6 @@
-package kafka.kafkaService.email.adapter.in.kafka;
+package kafka.kafkaService.email.adapter.in.web;
 
-import kafka.kafkaService.email.application.port.in.KafkaConsumerUseCase;
 import kafka.kafkaService.email.application.port.in.NotificationUseCase;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,12 +16,13 @@ public class NotificationController {
     @Value("${notification.secret}")
     private String expectedSecret;
 
-    private final KafkaConsumerUseCase kafkaConsumerUseCase;
+    private final NotificationUseCase notificationUseCase;
 
     @Autowired
-    public NotificationController(KafkaConsumerUseCase kafkaConsumerUseCase) {
-        this.kafkaConsumerUseCase = kafkaConsumerUseCase;
+    public NotificationController(NotificationUseCase notificationUseCase) {
+        this.notificationUseCase = notificationUseCase;
     }
+
 
     @PostMapping("/recovery-completed")
     public ResponseEntity<String> handleRecoveryEvent(
@@ -37,7 +35,7 @@ public class NotificationController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid Secret Key");
         }
 
-        int count = kafkaConsumerUseCase.pollAndProcessMessages();
+        int count = notificationUseCase.processPendingNotifications();
 
         log.info("recovery-completed endpoint done");
 

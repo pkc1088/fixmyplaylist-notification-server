@@ -1,34 +1,33 @@
-package kafka.kafkaService.email.application.service;
+package kafka.kafkaService.email.adapter.out.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kafka.kafkaService.email.application.port.in.KafkaConsumerUseCase;
-import kafka.kafkaService.email.application.port.in.NotificationUseCase;
+import kafka.kafkaService.email.application.port.out.MessagePullPort;
 import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import kafka.kafkaService.email.application.port.out.EventProcessor;
 import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Collections;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-public class KafkaConsumerService implements KafkaConsumerUseCase {
+public class KafkaMessagePullAdapter implements MessagePullPort {
 
     private final ConsumerFactory<String, String> consumerFactory;
-    private final NotificationUseCase notificationUseCase;
-    private final KafkaProducerService kafkaProducerService;
     private final ObjectMapper objectMapper;
 
     private static final String TOPIC_NAME = "recovery.completed.event";
 
-
-    public int pollAndProcessMessages() {
+    // 콜백 실행
+    @Override
+    public int pullAndProcess(EventProcessor processor) {
         int processedCount = 0;
 
         try (Consumer<String, String> consumer = consumerFactory.createConsumer()) {
@@ -47,17 +46,17 @@ public class KafkaConsumerService implements KafkaConsumerUseCase {
                 for (ConsumerRecord<String, String> record : records) {
                     try {
                         RecoveryCompletedEvent event = objectMapper.readValue(record.value(), RecoveryCompletedEvent.class);
-                        notificationUseCase.processRecoveryNotification(event);
+
+                        processor.process(event);
                         processedCount++;
 
                     } catch (Exception e) {
-                        log.error("Event Fail. Offset: {}", record.offset(), e);
-                        // 데이터를 DB나 DLQ 토픽에 저장하는 로직
-                        kafkaProducerService.sendToDlq(record.value(), e);
+                        log.error("Event Fail. Offset: {} - Move To DLQ.", record.offset(), e);
+
+                        processor.onFail(record.value(), e);
                     }
                 }
-
-                consumer.commitSync(); // Offset Commit (Sync)
+                consumer.commitSync();
             }
 
         } catch (Exception e) {
