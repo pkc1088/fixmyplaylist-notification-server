@@ -151,7 +151,6 @@ class NotificationIntegrationTest {
         List<RecoveryCompletedEvent.RecoveryDetail> list = new ArrayList<>();
 
         String playlistId = "playlistId-A";
-        String playlistTitle = "playlistTitle-A";
         String targetVideoId = "targetVideoId-";
         String targetVideoTitle = "targetVideoTitle-";
         String sourceVideoId = "sourceVideoId-";
@@ -160,7 +159,6 @@ class NotificationIntegrationTest {
         for (int i = 0; i < 3; i++) {
             list.add(new RecoveryCompletedEvent.RecoveryDetail(
                     playlistId,
-                    playlistTitle,
                     targetVideoId + i,
                     targetVideoTitle + i,
                     sourceVideoId + i,
@@ -175,14 +173,12 @@ class NotificationIntegrationTest {
         List<RecoveryCompletedEvent.CleanupDetail> list = new ArrayList<>();
 
         String playlistId = "playlistId-B";
-        String playlistTitle = "playlistTitle-B";
         String targetVideoId = "targetVideoId-";
         String targetVideoTitle = "targetVideoTitle-";
 
         for (int i = 0; i < 3; i++) {
             list.add(new RecoveryCompletedEvent.CleanupDetail(
                     playlistId,
-                    playlistTitle,
                     targetVideoId + i,
                     targetVideoTitle + i
             ));

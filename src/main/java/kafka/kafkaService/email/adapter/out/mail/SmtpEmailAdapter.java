@@ -34,7 +34,7 @@ public class SmtpEmailAdapter implements EmailPort {
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
         helper.setTo(event.userEmail());
-        helper.setSubject("[FixMyPlaylist] 복구 리포트 도착");
+        helper.setSubject("[FixMyPlaylist] A New Playlist Report");
 
         Context context = new Context();
         context.setVariable("event", event);
