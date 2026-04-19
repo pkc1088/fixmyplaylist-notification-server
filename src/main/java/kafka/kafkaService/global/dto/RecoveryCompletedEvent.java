@@ -13,7 +13,6 @@ public record RecoveryCompletedEvent(
 ) {
     public record RecoveryDetail(
             String playlistId,
-            String playlistTitle,
             // 기존 비정상 영상
             String targetVideoId,
             String targetVideoTitle,
@@ -24,7 +23,6 @@ public record RecoveryCompletedEvent(
 
     public record CleanupDetail(
             String playlistId,
-            String playlistTitle,
             // 정리된 비정상 영상
             String targetVideoId,
             String targetVideoTitle

@@ -1,7 +1,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>FixMyPlaylist 복구 리포트</title>
+    <title>FixMyPlaylist Report</title>
 </head>
 
 <body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, sans-serif;">
@@ -16,55 +16,52 @@
 
     <!-- GREETING -->
     <p style="font-size:15px; line-height:1.6; margin-bottom:20px;">
-        안녕하세요, <strong th:text="${event.userName}">고객</strong>님.<br>
-        새로운 복구 작업이
-        <strong style="color:#0d6efd;"
-                th:text="${#temporals.format(event.localDateTime, 'yyyy-MM-dd HH:mm')}">
-            시간
-        </strong>
-        에 완료되었습니다.
+        Hello, <strong th:text="${event.userName}">user</strong>.<br>
+        FixMyPlaylist has fixed up your playlists on
+        <strong style="color:#0d6efd;" th:text="${#temporals.format(event.localDateTime, 'yyyy-MM-dd')}">
+            time
+        </strong>.
     </p>
 
     <!-- RECOVERY -->
     <div th:if="${not #lists.isEmpty(event.recoveries)}" style="margin-bottom:30px;">
-        <h4 style="margin-bottom:10px;">🛠️ 복구된 항목</h4>
+        <h4 style="margin-bottom:10px;">🛠️ Recovered Items</h4>
 
         <div th:each="item : ${event.recoveries}" style="padding:12px; border:1px solid #e5e7eb; border-radius:6px; margin-bottom:10px;">
 
             <div style="font-size:14px; color:#b02a37; text-decoration:line-through;">
-                <span th:text="${item.targetVideoTitle}">원본</span>
+                <span th:text="${item.targetVideoTitle}">original video</span>
             </div>
 
             <div style="font-size:14px; color:#0d6efd; font-weight:bold;">
-                → <span th:text="${item.sourceVideoTitle}">복구</span>
+                → <span th:text="${item.sourceVideoTitle}">recovered video</span>
             </div>
         </div>
     </div>
 
     <!-- CLEANUP -->
     <div th:if="${not #lists.isEmpty(event.cleanups)}" style="margin-bottom:30px;">
-        <h4 style="margin-bottom:10px;">🧹 정리된 항목</h4>
+        <h4 style="margin-bottom:10px;">🧹 Cleaned-up Items</h4>
 
         <div th:each="item : ${event.cleanups}" style="padding:12px; border:1px solid #e5e7eb; border-radius:6px; margin-bottom:10px;">
 
             <div style="font-size:14px;">
-                <span th:text="${item.targetVideoTitle}">삭제된 영상</span>
+                <span th:text="${item.targetVideoId}">removed video</span>
             </div>
         </div>
     </div>
 
     <!-- CTA SECTION -->
     <div style="margin-top:20px; text-align:center; font-size:13px; color:#6c757d;">
-        자세한 사항은
+        Please visit
         <a href="https://www.fixmyplaylist.com" style="color:#0d6efd; text-decoration:none;">
             www.fixmyplaylist.com
         </a>
-        에서 확인하세요.
+        for more details.
     </div>
 
     <!-- FOOTER -->
-    <div style="border-top:1px solid #e5e7eb; padding-top:15px; font-size:12px; color:#6c757d; text-align:center;">
-        본 메일은 발신 전용입니다.<br>
+    <div style="border-top:1px solid #e5e7eb; padding-top:15px; font-size:12px; color:#6c757d; text-align:center;"><br>
         © 2026 FixMyPlaylist
     </div>
 

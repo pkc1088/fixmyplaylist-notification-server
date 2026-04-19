@@ -2,6 +2,7 @@ package kafka.kafkaService.email.adapter.out.kafka;
 
 import kafka.kafkaService.email.application.port.out.DlqPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -9,14 +10,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class KafkaDlqAdapter implements DlqPort {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    @Value("${app.kafka.topic.recovery-dlq}")
+    private String topicName;
 
-    private static final String DLQ_TOPIC = "recovery.dlq.event";
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
 
     @Override
     public void sendToDlq(String rawMessage, Exception e) {
 
-        kafkaTemplate.send(DLQ_TOPIC, rawMessage);
+        kafkaTemplate.send(topicName, rawMessage);
     }
 }

@@ -41,7 +41,7 @@ public class SmtpEmailAdapterTest {
         List<RecoveryCompletedEvent.RecoveryDetail> list = new ArrayList<>();
 
         String playlistId = "playlistId-A";
-        String playlistTitle = "playlistTitle-A";
+//        String playlistTitle = "playlistTitle-A";
         String targetVideoId = "targetVideoId-";
         String targetVideoTitle = "targetVideoTitle-";
         String sourceVideoId = "sourceVideoId-";
@@ -50,7 +50,7 @@ public class SmtpEmailAdapterTest {
         for (int i = 0; i < 3; i++) {
             list.add(new RecoveryCompletedEvent.RecoveryDetail(
                     playlistId,
-                    playlistTitle,
+//                    playlistTitle,
                     targetVideoId + i,
                     targetVideoTitle + i,
                     sourceVideoId + i,
@@ -65,14 +65,14 @@ public class SmtpEmailAdapterTest {
         List<RecoveryCompletedEvent.CleanupDetail> list = new ArrayList<>();
 
         String playlistId = "playlistId-B";
-        String playlistTitle = "playlistTitle-B";
+//        String playlistTitle = "playlistTitle-B";
         String targetVideoId = "targetVideoId-";
         String targetVideoTitle = "targetVideoTitle-";
 
         for (int i = 0; i < 3; i++) {
             list.add(new RecoveryCompletedEvent.CleanupDetail(
                     playlistId,
-                    playlistTitle,
+//                    playlistTitle,
                     targetVideoId + i,
                     targetVideoTitle + i
             ));
