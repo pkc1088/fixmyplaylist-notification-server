@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record RecoveryCompletedEvent(
+        String eventId,
         String userId,
         String userName,
         String userEmail,

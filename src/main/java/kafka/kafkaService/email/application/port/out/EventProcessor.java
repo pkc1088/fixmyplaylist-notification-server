@@ -7,5 +7,5 @@ public interface EventProcessor {
     // 성공 시 할 일
     void process(RecoveryCompletedEvent event) throws Exception;
     // 실패 시 할 일
-    void onFail(String rawMessage, Exception e);
+    void onFail(String rawMessage);
 }

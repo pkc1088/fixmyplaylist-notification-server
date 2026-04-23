@@ -62,7 +62,7 @@ public class KafkaMessagePullAdapter implements MessagePullPort {
                     } catch (Exception e) {
                         log.error("Event Fail. Offset: {} - Move To DLQ.", record.offset(), e);
 
-                        processor.onFail(record.value(), e);
+                        processor.onFail(record.value());
                     }
                 }
                 consumer.commitSync();

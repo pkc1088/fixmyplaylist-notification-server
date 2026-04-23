@@ -60,6 +60,7 @@ class NotificationIntegrationTest {
     @MockitoSpyBean
     private DlqPort dlqPort;
 
+    private static String eventId;
     private static String userId;
     private static String userName;
     private static String userEmail;
@@ -70,6 +71,7 @@ class NotificationIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        eventId = "eventId-123";
         userId = "112735690496635663877";
         userName = "pkc1088";
         userEmail = "pkcmax@naver.com";
@@ -79,10 +81,11 @@ class NotificationIntegrationTest {
     }
 
     @Test
-    @DisplayName("성공 시나리오: 카프카에 이벤트 있으면 메일 1번 발송하고 200 OK 반환")
+    @DisplayName("Success Scenario: Send one email as one Kafka event exists then return 200.")
     void testSuccessfulEmailNotification() throws Exception {
 
         RecoveryCompletedEvent event = new RecoveryCompletedEvent(
+                eventId,
                 userId,
                 userName,
                 userEmail,
@@ -100,20 +103,20 @@ class NotificationIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Successfully processed and sent 1 emails."));
 
-        // [검증] 메일 발송 로직 1번 호출되었는지 확인
+        // then
         verify(mailSender, times(1)).send(any(MimeMessage.class));
 
-        // [검증] 에러가 없었으니 DLQ 는 한 번도 호출되지 않아야 함
-        verify(dlqPort, never()).sendToDlq(anyString(), any(Exception.class));
+        verify(dlqPort, never()).sendToDlq(anyString());
     }
 
     @Test
-    @DisplayName("실패 시나리오: 메일 발송 예외 발생 시 3번 재시도 후 DLQ 전송")
+    @DisplayName("Fail Scenario: exception after 3 times of sending emails then send DLQ.")
     void testPoisonPillGoesToDlq() throws Exception {
-        // [메일 서버 장애 시뮬레이션] 메일 전송 시도 시 무조건 에러가 나도록 조작
+        // given
         doThrow(new RuntimeException("SMTP Server Down!")).when(mailSender).send(any(MimeMessage.class));
 
         RecoveryCompletedEvent event = new RecoveryCompletedEvent(
+                eventId,
                 userId,
                 userName,
                 userEmail,
@@ -121,6 +124,8 @@ class NotificationIntegrationTest {
                 makeSomeCleanupDetail(),
                 LocalDateTime.now()
         );
+
+        // when
         String eventJson = objectMapper.writeValueAsString(event);
         testKafkaProducer.send(TOPIC, eventJson).get();
 
@@ -130,15 +135,14 @@ class NotificationIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Successfully processed and sent 0 emails."));
 
-        // [검증] @Retryable(maxAttempts = 3)이 정상 작동해서 정확히 3번 메일 발송 시도했는가?
+        // then
         verify(mailSender, times(3)).send(any(MimeMessage.class));
 
-        // [검증] 3번 다 실패했으니, DLQ 포트가 정확히 1번 호출되어 에러 데이터를 격리했는가?
-        verify(dlqPort, times(1)).sendToDlq(eq(eventJson), any(RuntimeException.class));
+        verify(dlqPort, times(1)).sendToDlq(eq(eventJson));
     }
 
     @Test
-    @DisplayName("보안 검증: 잘못된 시크릿 키로 요청하면 403 Forbidden을 반환한다")
+    @DisplayName("Security Check: Return 403 Forbidden")
     void testInvalidSecretKey() throws Exception {
         mockMvc.perform(post("/api/internal/notifications/recovery-completed")
                         .header("X-Notification-Secret", "이상한_비밀번호"))

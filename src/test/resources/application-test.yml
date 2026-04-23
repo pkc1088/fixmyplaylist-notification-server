@@ -1,0 +1,82 @@
+server:
+  port: 8081
+  address: 0.0.0.0
+  forward-headers-strategy: framework
+
+notification:
+  secret: dummy
+
+
+app:
+  kafka:
+    topic:
+      recovery-completed: dev.recovery.completed.event
+      recovery-dlq: dev.recovery.dlq.event
+
+
+resend:
+  api-key: "dummy"
+  from-email: "dummy"
+
+
+spring:
+  application:
+    name: kafkaService
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: pkc1088@gmail.com
+    password: dummy
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  kafka:
+    bootstrap-servers: dummy
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="dummy" password="dummy";
+    consumer:
+      group-id: dev-notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/noti?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&rewriteBatchedStatements=true
+    username: dummy
+    password: dummy
+    hikari:
+      maximum-pool-size: 40
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+    open-in-view: false
+
+
+logging:
+  level:
+    org:
+      hibernate:
+        sql: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
