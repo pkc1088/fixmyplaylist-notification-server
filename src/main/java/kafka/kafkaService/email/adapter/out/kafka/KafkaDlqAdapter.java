@@ -3,21 +3,16 @@ package kafka.kafkaService.email.adapter.out.kafka;
 import kafka.kafkaService.email.application.port.out.DlqPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Service
 @RequiredArgsConstructor
 public class KafkaDlqAdapter implements DlqPort {
 
-    @Value("${app.kafka.topic.recovery-dlq}")
-    private String topicName;
-
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final String topicName;
 
 
     @Override

@@ -25,13 +25,14 @@ public class RetryNotificationService implements RetryNotificationUseCase {
     private final ObjectMapper objectMapper;
 
     private static final int maxRetryCount = 5;
+    private static final int minusMinutes = 5;
 
 
     @Override
     public int retryFailedNotifications() {
 
-        LocalDateTime gracePeriod = LocalDateTime.now().minusMinutes(5);
-        List<NotificationInbox> candidates = notificationInboxPort.findRetryCandidates(gracePeriod, maxRetryCount);
+        List<NotificationInbox> candidates = notificationInboxPort
+                .findRetryCandidates(LocalDateTime.now().minusMinutes(minusMinutes), maxRetryCount);
 
         if (candidates.isEmpty()) {
             log.info("[Nothing to retry]");

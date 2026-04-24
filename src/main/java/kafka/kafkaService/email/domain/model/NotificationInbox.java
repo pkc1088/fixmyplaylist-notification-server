@@ -68,7 +68,11 @@ public class NotificationInbox implements Persistable<String> {
     }
 
     @Builder
-    public NotificationInbox(String eventId, String userId, String userEmail, String payload) {
+    public NotificationInbox(String eventId,
+                             String userId,
+                             String userEmail,
+                             String payload) {
+
         this.eventId = eventId;
         this.userId = userId;
         this.userEmail = userEmail;

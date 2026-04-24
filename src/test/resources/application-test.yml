@@ -3,6 +3,12 @@ server:
   address: 0.0.0.0
   forward-headers-strategy: framework
 
+
+resend:
+  api-key: "dummy"
+  from-email: "dummy"
+
+
 notification:
   secret: dummy
 
@@ -12,11 +18,6 @@ app:
     topic:
       recovery-completed: dev.recovery.completed.event
       recovery-dlq: dev.recovery.dlq.event
-
-
-resend:
-  api-key: "dummy"
-  from-email: "dummy"
 
 
 spring:

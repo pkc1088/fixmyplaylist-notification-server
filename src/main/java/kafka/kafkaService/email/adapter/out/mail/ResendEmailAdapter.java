@@ -19,17 +19,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@Service
 @RequiredArgsConstructor
 public class ResendEmailAdapter implements EmailPort {
 
-    @Value("${resend.api-key}")
-    private String resendApiKey;
-
-    @Value("${resend.from-email}")
-    private String fromEmail;
-
     private final SpringTemplateEngine templateEngine;
+    private final String resendApiKey;
+    private final String fromEmail;
 
 
     @Retryable(
