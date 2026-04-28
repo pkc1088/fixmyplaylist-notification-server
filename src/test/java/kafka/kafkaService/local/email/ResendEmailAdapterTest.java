@@ -1,15 +1,12 @@
 package kafka.kafkaService.local.email;
 
 import kafka.kafkaService.email.application.port.out.EmailPort;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
-import lombok.RequiredArgsConstructor;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

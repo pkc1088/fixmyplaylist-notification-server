@@ -6,7 +6,7 @@ import kafka.kafkaService.email.application.port.out.DlqPort;
 import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.email.application.port.out.EventProcessor;
 import kafka.kafkaService.email.application.port.out.MessagePullPort;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificationService implements NotificationUseCase {
 
-    private final InboxStateManager inboxStateManager;
+    private final InboxStateService inboxStateService;
     private final MessagePullPort messagePullPort;
     private final EmailPort resendEmailAdapter;
     private final ObjectMapper objectMapper;
@@ -31,7 +31,10 @@ public class NotificationService implements NotificationUseCase {
 
             @Override
             public void process(RecoveryCompletedEvent event) throws Exception {
-                boolean isNewEvent = inboxStateManager.saveToInboxIdempotent(event);
+
+                String payloadJson = objectMapper.writeValueAsString(event);
+
+                boolean isNewEvent = inboxStateService.saveToInboxIdempotent(event, payloadJson);
                 if (!isNewEvent) {
                     log.info("Event {} already processed. Skipping.", event.eventId());
                     return;
@@ -39,7 +42,7 @@ public class NotificationService implements NotificationUseCase {
                 // 실패 시 여기서 예외가 터짐
                 resendEmailAdapter.sendRecoveryEmail(event);
                 // 발송 성공 시 DB 상태 업데이트
-                inboxStateManager.updateInboxStatusToSuccess(event.eventId());
+                inboxStateService.updateInboxStatusToSuccess(event.eventId());
             }
 
             @Override
@@ -50,7 +53,7 @@ public class NotificationService implements NotificationUseCase {
                 try {
                     RecoveryCompletedEvent event = objectMapper.readValue(rawMessage, RecoveryCompletedEvent.class);
 
-                    inboxStateManager.updateInboxStatusToFailed(event.eventId());
+                    inboxStateService.updateInboxStatusToFailed(event.eventId());
                     log.info("Updated Event {} Status To FAILED.", event.eventId());
 
                 } catch (Exception parseException) {

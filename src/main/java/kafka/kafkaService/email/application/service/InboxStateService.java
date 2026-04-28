@@ -1,52 +1,34 @@
 package kafka.kafkaService.email.application.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.kafkaService.email.application.port.out.NotificationInboxPort;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import kafka.kafkaService.email.domain.model.NotificationInbox;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class InboxStateManager {
+public class InboxStateService {
 
     private final NotificationInboxPort notificationInboxPort;
-    private final ObjectMapper objectMapper;
 
 
-    @Transactional
-    public boolean saveToInboxIdempotent(RecoveryCompletedEvent event) {
-        try {
-            String payloadJson = objectMapper.writeValueAsString(event);
+    // Don't Start TX Here
+    public boolean saveToInboxIdempotent(RecoveryCompletedEvent event, String payloadJson) {
+        NotificationInbox inbox = NotificationInbox.builder()
+                .eventId(event.eventId())
+                .userId(event.userId())
+                .userEmail(event.userEmail())
+                .payload(payloadJson)
+                .build();
 
-            NotificationInbox inbox = NotificationInbox.builder()
-                    .eventId(event.eventId())
-                    .userId(event.userId())
-                    .userEmail(event.userEmail())
-                    .payload(payloadJson)
-                    .build();
-
-            notificationInboxPort.save(inbox);
-
-            return true;
-
-        } catch (DataIntegrityViolationException e) {
-            return false; // 중복 이벤트 수신
-
-        } catch (Exception e) {
-            throw new RuntimeException("Fail to save Inbox", e);
-        }
+        return notificationInboxPort.save(inbox);
     }
 
 

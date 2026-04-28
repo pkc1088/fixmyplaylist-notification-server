@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface NotificationInboxPort {
 
-    NotificationInbox save(NotificationInbox inbox);
+    boolean save(NotificationInbox inbox);
 
     void updateStatusDirectly(String eventId, NotificationInbox.Status status);
 

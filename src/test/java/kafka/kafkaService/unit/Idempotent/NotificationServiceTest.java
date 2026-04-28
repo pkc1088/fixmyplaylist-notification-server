@@ -1,13 +1,13 @@
-package kafka.kafkaService.local.Idempotent;
+package kafka.kafkaService.unit.Idempotent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.kafkaService.email.application.port.out.DlqPort;
 import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.email.application.port.out.EventProcessor;
 import kafka.kafkaService.email.application.port.out.MessagePullPort;
-import kafka.kafkaService.email.application.service.InboxStateManager;
+import kafka.kafkaService.email.application.service.InboxStateService;
 import kafka.kafkaService.email.application.service.NotificationService;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class NotificationServiceTest {
     private DlqPort dlqPort;
 
     @Mock
-    private InboxStateManager inboxStateManager;
+    private InboxStateService inboxStateService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -67,14 +67,14 @@ class NotificationServiceTest {
         }).when(messagePullPort).pullAndProcess(any(EventProcessor.class));
 
         // general use case
-        given(inboxStateManager.saveToInboxIdempotent(dummyEvent)).willReturn(true);
+        given(inboxStateService.saveToInboxIdempotent(eq(dummyEvent), any())).willReturn(true);
 
         // when
         notificationService.processPendingNotifications();
 
         // then: Resend 호출과 상태 업데이트 1번씩 실행되어야 함
         verify(resendEmailAdapter, times(1)).sendRecoveryEmail(dummyEvent);
-        verify(inboxStateManager, times(1)).updateInboxStatusToSuccess("evt_test_123");
+        verify(inboxStateService, times(1)).updateInboxStatusToSuccess("evt_test_123");
         verify(dlqPort, never()).sendToDlq(anyString());
     }
 
@@ -89,14 +89,14 @@ class NotificationServiceTest {
         }).when(messagePullPort).pullAndProcess(any(EventProcessor.class));
 
         // duplicated event
-        given(inboxStateManager.saveToInboxIdempotent(dummyEvent)).willReturn(false);
+        given(inboxStateService.saveToInboxIdempotent(eq(dummyEvent), any())).willReturn(false);
 
         // when
         notificationService.processPendingNotifications();
 
         // then
         verify(resendEmailAdapter, never()).sendRecoveryEmail(any());
-        verify(inboxStateManager, never()).updateInboxStatusToSuccess(anyString());
+        verify(inboxStateService, never()).updateInboxStatusToSuccess(anyString());
     }
 
     @Test
@@ -113,7 +113,7 @@ class NotificationServiceTest {
             return 1;
         }).when(messagePullPort).pullAndProcess(any(EventProcessor.class));
 
-        given(inboxStateManager.saveToInboxIdempotent(dummyEvent)).willReturn(true);
+        given(inboxStateService.saveToInboxIdempotent(eq(dummyEvent), any())).willReturn(true);
         given(objectMapper.readValue(eq("dummy_raw_message"), eq(RecoveryCompletedEvent.class))).willReturn(dummyEvent);
         // Resend API 예외
         doThrow(new RuntimeException("Resend API Timeout")).when(resendEmailAdapter).sendRecoveryEmail(dummyEvent);
@@ -122,8 +122,8 @@ class NotificationServiceTest {
         notificationService.processPendingNotifications();
 
         // then: SUCCESS 업데이트는 실행되지 않고, DLQ 발행 및 FAILED 업데이트가 실행되어야 함
-        verify(inboxStateManager, never()).updateInboxStatusToSuccess(anyString());
+        verify(inboxStateService, never()).updateInboxStatusToSuccess(anyString());
         verify(dlqPort, times(1)).sendToDlq(eq("dummy_raw_message"));
-        verify(inboxStateManager, times(1)).updateInboxStatusToFailed(anyString());
+        verify(inboxStateService, times(1)).updateInboxStatusToFailed(anyString());
     }
 }

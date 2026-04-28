@@ -1,7 +1,7 @@
 package kafka.kafkaService.local.email;
 
 import kafka.kafkaService.email.application.port.out.EmailPort;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

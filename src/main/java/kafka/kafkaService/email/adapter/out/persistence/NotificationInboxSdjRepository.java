@@ -23,7 +23,7 @@ public interface NotificationInboxSdjRepository extends JpaRepository<Notificati
 
 
     @Query("SELECT n FROM NotificationInbox n WHERE n.status = 'FAILED' AND n.retryCount < :maxRetryCount")
-    List<NotificationInbox> findFailedCandidates(@Param("retryCount") int maxRetryCount);
+    List<NotificationInbox> findFailedCandidates(@Param("maxRetryCount") int maxRetryCount);
 
 
     @Modifying(clearAutomatically = true)

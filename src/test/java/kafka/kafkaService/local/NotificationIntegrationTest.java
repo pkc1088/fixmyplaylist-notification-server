@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import kafka.kafkaService.email.application.port.out.DlqPort;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

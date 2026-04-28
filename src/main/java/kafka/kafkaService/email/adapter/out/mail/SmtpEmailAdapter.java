@@ -2,7 +2,7 @@ package kafka.kafkaService.email.adapter.out.mail;
 
 import jakarta.mail.internet.MimeMessage;
 import kafka.kafkaService.email.application.port.out.EmailPort;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;

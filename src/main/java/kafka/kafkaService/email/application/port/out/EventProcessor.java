@@ -1,6 +1,6 @@
 package kafka.kafkaService.email.application.port.out;
 
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 
 // 콜백 정의
 public interface EventProcessor {

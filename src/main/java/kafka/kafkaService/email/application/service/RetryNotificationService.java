@@ -6,7 +6,7 @@ import kafka.kafkaService.email.application.port.in.RetryNotificationUseCase;
 import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.email.application.port.out.NotificationInboxPort;
 import kafka.kafkaService.email.domain.model.NotificationInbox;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.List;
 public class RetryNotificationService implements RetryNotificationUseCase {
 
     private final NotificationInboxPort notificationInboxPort;
-    private final InboxStateManager inboxStateManager;
+    private final InboxStateService inboxStateService;
     private final EmailPort resendEmailAdapter;
     private final ObjectMapper objectMapper;
 
@@ -47,17 +47,17 @@ public class RetryNotificationService implements RetryNotificationUseCase {
 
                 resendEmailAdapter.sendRecoveryEmail(event); // Resend 멱등성 작동
 
-                inboxStateManager.updateInboxStatusToSuccess(inbox.getEventId());
+                inboxStateService.updateInboxStatusToSuccess(inbox.getEventId());
                 successCount++;
                 log.info("Retry Success: Event ID = {}", inbox.getEventId());
 
             } catch (JsonProcessingException e) {
                 log.error("JsonProcessingException: {}", inbox.getEventId(), e);
-                inboxStateManager.markAsDeadImmediately(inbox.getEventId());
+                inboxStateService.markAsDeadImmediately(inbox.getEventId());
 
             } catch (Exception e) {
                 log.error("Retry Fail: {}", inbox.getEventId(), e);
-                inboxStateManager.handleRetryFailure(inbox.getEventId(), inbox.getRetryCount(), maxRetryCount);
+                inboxStateService.handleRetryFailure(inbox.getEventId(), inbox.getRetryCount(), maxRetryCount);
             }
         }
 

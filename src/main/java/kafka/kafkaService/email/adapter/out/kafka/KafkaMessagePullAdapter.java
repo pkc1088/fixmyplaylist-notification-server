@@ -3,7 +3,7 @@ package kafka.kafkaService.email.adapter.out.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.kafkaService.email.application.port.out.EventProcessor;
 import kafka.kafkaService.email.application.port.out.MessagePullPort;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -22,7 +22,7 @@ public class KafkaMessagePullAdapter implements MessagePullPort {
     private final ObjectMapper objectMapper;
     private final String topicName;
 
-    private static final int MAX_EMPTY_POLLS = 2;
+    private static final int MAX_EMPTY_POLLS = 3;
 
     // 콜백 실행
     @Override
