@@ -1,9 +1,10 @@
-package kafka.kafkaService.global.dto;
+package kafka.kafkaService.email.application.service.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record RecoveryCompletedEvent(
+        String eventId,
         String userId,
         String userName,
         String userEmail,

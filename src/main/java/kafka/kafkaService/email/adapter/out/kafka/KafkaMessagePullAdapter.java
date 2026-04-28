@@ -1,33 +1,28 @@
 package kafka.kafkaService.email.adapter.out.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kafka.kafkaService.email.application.port.out.EventProcessor;
 import kafka.kafkaService.email.application.port.out.MessagePullPort;
-import kafka.kafkaService.global.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import kafka.kafkaService.email.application.port.out.EventProcessor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Collections;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class KafkaMessagePullAdapter implements MessagePullPort {
 
-    @Value("${app.kafka.topic.recovery-completed}")
-    private String topicName;
-
     private final ConsumerFactory<String, String> consumerFactory;
     private final ObjectMapper objectMapper;
+    private final String topicName;
 
-    private static final int MAX_EMPTY_POLLS = 2;
+    private static final int MAX_EMPTY_POLLS = 3;
 
     // 콜백 실행
     @Override
@@ -62,7 +57,7 @@ public class KafkaMessagePullAdapter implements MessagePullPort {
                     } catch (Exception e) {
                         log.error("Event Fail. Offset: {} - Move To DLQ.", record.offset(), e);
 
-                        processor.onFail(record.value(), e);
+                        processor.onFail(record.value());
                     }
                 }
                 consumer.commitSync();

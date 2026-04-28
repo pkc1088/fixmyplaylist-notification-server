@@ -1,25 +1,27 @@
 package kafka.kafkaService.email.adapter.out.mail;
 
-import jakarta.mail.internet.MimeMessage;
+import com.resend.Resend;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
 import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
-import org.springframework.stereotype.Component;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-@Slf4j
-@Component
-@RequiredArgsConstructor
-public class SmtpEmailAdapter implements EmailPort {
+import java.util.HashMap;
+import java.util.Map;
 
-    private final JavaMailSender mailSender;
+@Slf4j
+@RequiredArgsConstructor
+public class ResendEmailAdapter implements EmailPort {
+
     private final SpringTemplateEngine templateEngine;
+    private final String resendApiKey;
+    private final String fromEmail;
 
 
     @Retryable(
@@ -27,23 +29,27 @@ public class SmtpEmailAdapter implements EmailPort {
             maxAttempts = 3,
             backoff = @Backoff(delay = 3000)
     )
-    @Override
     public void sendRecoveryEmail(RecoveryCompletedEvent event) throws Exception {
-
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-
-        helper.setTo(event.userEmail());
-        helper.setSubject("[FixMyPlaylist] A New Playlist Report");
 
         Context context = new Context();
         context.setVariable("event", event);
 
         String htmlContent = templateEngine.process("recovery_report", context);
 
-        helper.setText(htmlContent, true);
+        Resend resend = new Resend(resendApiKey);
 
-        mailSender.send(mimeMessage);
-        log.info("[이메일 발송 완료] 대상: {}", event.userEmail());
+        Map<String, String> customHeaders = new HashMap<>();
+        customHeaders.put("Idempotency-Key", event.eventId());
+
+        CreateEmailOptions params = CreateEmailOptions.builder()
+                .from(fromEmail)
+                .to(event.userEmail())
+                .subject("[FixMyPlaylist] A New Playlist Report")
+                .html(htmlContent)
+                .headers(customHeaders)
+                .build();
+
+        CreateEmailResponse response = resend.emails().send(params);
+        log.info("[이메일 발송 성공] Resend ID: {}", response.getId());
     }
 }
