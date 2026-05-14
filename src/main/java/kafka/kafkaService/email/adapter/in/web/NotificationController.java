@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/internal/notifications")
 public class NotificationController {
 
-    private final NotificationUseCase notificationUseCase;
     private final RetryNotificationUseCase retryFailedNotifications;
+    private final NotificationUseCase notificationUseCase;
 
 
     @PostMapping("/recovery-completed")

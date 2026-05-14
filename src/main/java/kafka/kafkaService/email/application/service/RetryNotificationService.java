@@ -6,7 +6,7 @@ import kafka.kafkaService.email.application.port.in.RetryNotificationUseCase;
 import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.email.application.port.out.NotificationInboxPort;
 import kafka.kafkaService.email.domain.model.NotificationInbox;
-import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

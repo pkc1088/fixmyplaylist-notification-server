@@ -4,7 +4,7 @@ import com.resend.Resend;
 import com.resend.services.emails.model.CreateEmailOptions;
 import com.resend.services.emails.model.CreateEmailResponse;
 import kafka.kafkaService.email.application.port.out.EmailPort;
-import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
@@ -44,7 +44,7 @@ public class ResendEmailAdapter implements EmailPort {
         CreateEmailOptions params = CreateEmailOptions.builder()
                 .from(fromEmail)
                 .to(event.userEmail())
-                .subject("[FixMyPlaylist] A New Playlist Report")
+                .subject("A New Playlist Report")
                 .html(htmlContent)
                 .headers(customHeaders)
                 .build();

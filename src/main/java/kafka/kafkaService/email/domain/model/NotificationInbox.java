@@ -68,11 +68,12 @@ public class NotificationInbox implements Persistable<String> {
     }
 
     @Builder
-    public NotificationInbox(String eventId,
-                             String userId,
-                             String userEmail,
-                             String payload) {
-
+    public NotificationInbox(
+            String eventId,
+            String userId,
+            String userEmail,
+            String payload
+    ) {
         this.eventId = eventId;
         this.userId = userId;
         this.userEmail = userEmail;
@@ -80,5 +81,22 @@ public class NotificationInbox implements Persistable<String> {
         this.status = Status.PENDING;
         this.createdAt = LocalDateTime.now();
         this.isNew = true;
+    }
+
+    public static NotificationInbox create(
+            String eventId,
+            String userId,
+            String userEmail,
+            String payload
+    ) {
+        if (eventId == null || eventId.isBlank()) {
+            throw new IllegalArgumentException("Inbox 생성을 위한 eventId가 누락되었습니다. payload: " + payload);
+        }
+        return NotificationInbox.builder()
+                .eventId(eventId)
+                .userId(userId)
+                .userEmail(userEmail)
+                .payload(payload)
+                .build();
     }
 }

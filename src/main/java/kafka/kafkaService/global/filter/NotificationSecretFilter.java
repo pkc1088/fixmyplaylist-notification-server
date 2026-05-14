@@ -19,14 +19,18 @@ public class NotificationSecretFilter extends OncePerRequestFilter {
     private final String expectedSecret;
 
 
-    public NotificationSecretFilter(@Value("${notification.secret}") String expectedSecret) {
+    public NotificationSecretFilter(
+            @Value("${notification.secret}") String expectedSecret
+    ) {
         this.expectedSecret = expectedSecret;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         if (request.getRequestURI().startsWith("/api/internal/notifications")) {
             String requestSecret = request.getHeader("X-Notification-Secret");
