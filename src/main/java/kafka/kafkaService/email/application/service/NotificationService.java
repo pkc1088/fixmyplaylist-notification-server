@@ -6,7 +6,7 @@ import kafka.kafkaService.email.application.port.out.DlqPort;
 import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.email.application.port.out.EventProcessor;
 import kafka.kafkaService.email.application.port.out.MessagePullPort;
-import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

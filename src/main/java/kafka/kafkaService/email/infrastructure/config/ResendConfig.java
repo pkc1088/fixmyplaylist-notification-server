@@ -1,4 +1,4 @@
-package kafka.kafkaService.global.config;
+package kafka.kafkaService.email.infrastructure.config;
 
 import kafka.kafkaService.email.adapter.out.mail.ResendEmailAdapter;
 import kafka.kafkaService.email.application.port.out.EmailPort;
@@ -13,10 +13,11 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 public class ResendConfig {
 
     @Bean
-    public EmailPort resendEmailAdapter(SpringTemplateEngine templateEngine,
-                                        @Value("${resend.api-key}") String resendApiKey,
-                                        @Value("${resend.from-email}") String fromEmail) {
-
+    public EmailPort resendEmailAdapter(
+            SpringTemplateEngine templateEngine,
+            @Value("${resend.api-key}") String resendApiKey,
+            @Value("${resend.from-email}") String fromEmail
+    ) {
         return new ResendEmailAdapter(templateEngine, resendApiKey, fromEmail);
     }
 }

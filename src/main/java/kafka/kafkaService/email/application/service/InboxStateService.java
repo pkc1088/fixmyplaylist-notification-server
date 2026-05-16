@@ -1,7 +1,7 @@
 package kafka.kafkaService.email.application.service;
 
 import kafka.kafkaService.email.application.port.out.NotificationInboxPort;
-import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import kafka.kafkaService.email.domain.model.NotificationInbox;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,12 +21,16 @@ public class InboxStateService {
 
     // Don't Start TX Here
     public boolean saveToInboxIdempotent(RecoveryCompletedEvent event, String payloadJson) {
-        NotificationInbox inbox = NotificationInbox.builder()
-                .eventId(event.eventId())
-                .userId(event.userId())
-                .userEmail(event.userEmail())
-                .payload(payloadJson)
-                .build();
+        if (event.eventId() == null || event.eventId().isBlank()) {
+            return false;
+        }
+
+        NotificationInbox inbox = NotificationInbox.create(
+                event.eventId(),
+                event.userId(),
+                event.userEmail(),
+                payloadJson
+        );
 
         return notificationInboxPort.save(inbox);
     }

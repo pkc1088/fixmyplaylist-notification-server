@@ -1,4 +1,4 @@
-package kafka.kafkaService.email.application.service.dto;
+package kafka.kafkaService.email.application.port.out.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;

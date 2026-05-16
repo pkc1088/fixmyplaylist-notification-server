@@ -7,7 +7,7 @@ import kafka.kafkaService.email.application.port.out.EventProcessor;
 import kafka.kafkaService.email.application.port.out.MessagePullPort;
 import kafka.kafkaService.email.application.service.InboxStateService;
 import kafka.kafkaService.email.application.service.NotificationService;
-import kafka.kafkaService.email.application.service.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

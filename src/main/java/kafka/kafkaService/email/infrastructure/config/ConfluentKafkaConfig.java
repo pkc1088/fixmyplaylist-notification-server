@@ -1,4 +1,4 @@
-package kafka.kafkaService.global.config;
+package kafka.kafkaService.email.infrastructure.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.kafkaService.email.adapter.out.kafka.KafkaDlqAdapter;
@@ -17,18 +17,20 @@ import org.springframework.kafka.core.KafkaTemplate;
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 public class ConfluentKafkaConfig {
 
-        @Bean
-        public MessagePullPort recoveryCompletedTopic(@Value("${app.kafka.topic.recovery-completed}") String topicName,
-                                                      ConsumerFactory<String, String> consumerFactory,
-                                                      ObjectMapper objectMapper) {
+    @Bean
+    public MessagePullPort recoveryCompletedTopic(
+            @Value("${app.kafka.topic.recovery-completed}") String topicName,
+            ConsumerFactory<String, String> consumerFactory,
+            ObjectMapper objectMapper
+    ) {
+        return new KafkaMessagePullAdapter(consumerFactory, objectMapper, topicName);
+    }
 
-                return new KafkaMessagePullAdapter(consumerFactory, objectMapper, topicName);
-        }
-
-        @Bean
-        public DlqPort recoveryDlqTopic(@Value("${app.kafka.topic.recovery-dlq}") String topicName,
-                                        KafkaTemplate<String, String> kafkaTemplate) {
-
-                return new KafkaDlqAdapter(kafkaTemplate, topicName);
-        }
+    @Bean
+    public DlqPort recoveryDlqTopic(
+            @Value("${app.kafka.topic.recovery-dlq}") String topicName,
+            KafkaTemplate<String, String> kafkaTemplate)
+    {
+        return new KafkaDlqAdapter(kafkaTemplate, topicName);
+    }
 }
