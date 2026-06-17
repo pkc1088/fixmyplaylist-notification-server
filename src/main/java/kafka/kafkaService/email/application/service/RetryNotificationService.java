@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.kafkaService.email.application.port.in.RetryNotificationUseCase;
 import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.email.application.port.out.NotificationInboxPort;
-import kafka.kafkaService.email.domain.model.NotificationInbox;
+import kafka.kafkaService.email.domain.model.Notification;
 import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,18 +20,17 @@ import java.util.List;
 public class RetryNotificationService implements RetryNotificationUseCase {
 
     private final NotificationInboxPort notificationInboxPort;
-    private final InboxStateService inboxStateService;
     private final EmailPort resendEmailAdapter;
     private final ObjectMapper objectMapper;
 
-    private static final int maxRetryCount = 5;
-    private static final int minusMinutes = 5;
+    private static final int maxRetryCount = 3;
+    private static final int minusMinutes = 3;
 
 
     @Override
     public int retryFailedNotifications() {
 
-        List<NotificationInbox> candidates = notificationInboxPort
+        List<Notification> candidates = notificationInboxPort
                 .findRetryCandidates(LocalDateTime.now().minusMinutes(minusMinutes), maxRetryCount);
 
         if (candidates.isEmpty()) {
@@ -41,24 +40,25 @@ public class RetryNotificationService implements RetryNotificationUseCase {
 
         int successCount = 0;
 
-        for (NotificationInbox inbox : candidates) {
+        for (Notification notification : candidates) {
             try {
-                RecoveryCompletedEvent event = objectMapper.readValue(inbox.getPayload(), RecoveryCompletedEvent.class);
-
+                RecoveryCompletedEvent event = objectMapper.readValue(notification.getPayload(), RecoveryCompletedEvent.class);
                 resendEmailAdapter.sendRecoveryEmail(event); // Resend 멱등성 작동
 
-                inboxStateService.updateInboxStatusToSuccess(inbox.getEventId());
+                log.info("Retry Success: {}", notification.getEventId());
+                notification.markAsSuccess();
                 successCount++;
-                log.info("Retry Success: Event ID = {}", inbox.getEventId());
 
             } catch (JsonProcessingException e) {
-                log.error("JsonProcessingException: {}", inbox.getEventId(), e);
-                inboxStateService.markAsDeadImmediately(inbox.getEventId());
+                log.error("JsonProcessingException: {}", notification.getEventId(), e);
+                notification.markAsDead();
 
             } catch (Exception e) {
-                log.error("Retry Fail: {}", inbox.getEventId(), e);
-                inboxStateService.handleRetryFailure(inbox.getEventId(), inbox.getRetryCount(), maxRetryCount);
+                log.error("Retry Fail: {}", notification.getEventId(), e);
+                notification.handleFailure(maxRetryCount);
             }
+
+            notificationInboxPort.updateRetriedNotification(notification);
         }
 
         return successCount;

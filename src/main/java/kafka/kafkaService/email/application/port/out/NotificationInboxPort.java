@@ -1,17 +1,17 @@
 package kafka.kafkaService.email.application.port.out;
 
-import kafka.kafkaService.email.domain.model.NotificationInbox;
+import kafka.kafkaService.email.domain.model.Notification;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface NotificationInboxPort {
 
-    boolean save(NotificationInbox inbox);
+    boolean saveIdempotent(Notification inbox);
 
-    void updateStatusDirectly(String eventId, NotificationInbox.Status status);
+    void updateRetriedNotification(Notification notification);
 
-    List<NotificationInbox> findRetryCandidates(LocalDateTime gracePeriod, int maxRetryCount);
+    void updateStatusDirectly(String eventId, Notification.Status status);
 
-    void incrementRetryCountDirectly(String eventId);
+    List<Notification> findRetryCandidates(LocalDateTime gracePeriod, int maxRetryCount);
 }
