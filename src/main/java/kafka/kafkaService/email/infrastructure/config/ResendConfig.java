@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @Slf4j
@@ -15,9 +16,15 @@ public class ResendConfig {
     @Bean
     public EmailPort resendEmailAdapter(
             SpringTemplateEngine templateEngine,
+            RestClient.Builder restClientBuilder,
             @Value("${resend.api-key}") String resendApiKey,
             @Value("${resend.from-email}") String fromEmail
     ) {
-        return new ResendEmailAdapter(templateEngine, resendApiKey, fromEmail);
+        return new ResendEmailAdapter(
+                templateEngine,
+                restClientBuilder.build(),
+                resendApiKey,
+                fromEmail
+        );
     }
 }

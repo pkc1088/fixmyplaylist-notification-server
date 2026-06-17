@@ -36,12 +36,12 @@ public class NotificationService implements NotificationUseCase {
 
                 boolean isNewEvent = inboxStateService.saveToInboxIdempotent(event, payloadJson);
                 if (!isNewEvent) {
-                    log.info("Event {} already processed. Skipping.", event.eventId());
+                    log.warn("Event {} already processed. Skipping.", event.eventId());
                     return;
                 }
-                // 실패 시 여기서 예외가 터짐
+
                 resendEmailAdapter.sendRecoveryEmail(event);
-                // 발송 성공 시 DB 상태 업데이트
+
                 inboxStateService.updateInboxStatusToSuccess(event.eventId());
             }
 

@@ -1,7 +1,8 @@
 package kafka.kafkaService.email.adapter.out.persistence;
 
 import kafka.kafkaService.email.application.port.out.NotificationInboxPort;
-import kafka.kafkaService.email.domain.model.NotificationInbox;
+import kafka.kafkaService.email.domain.model.Notification;
+import kafka.kafkaService.email.domain.model.NotificationJpaEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,37 +19,42 @@ import java.util.List;
 public class NotificationInboxJpaAdapter implements NotificationInboxPort {
 
     private final NotificationInboxSdjRepository repository;
+    private final NotificationMapper mapper;
 
 
     @Override
-    public boolean save(NotificationInbox inbox) {
+    public boolean saveIdempotent(Notification notification) {
         try {
-            repository.saveAndFlush(inbox);
+            NotificationJpaEntity entity = mapper.toEntity(notification, true);
+            repository.saveAndFlush(entity);
             return true;
 
         } catch (DataIntegrityViolationException e) {
-            log.info("[Caught DataIntegrityViolationException]");
+            log.error("[Caught DataIntegrityViolationException]", e);
             return false;
         }
     }
 
     @Override
-    public void updateStatusDirectly(String eventId, NotificationInbox.Status status) {
+    public void updateRetriedNotification(Notification notification) {
+        NotificationJpaEntity entity = mapper.toEntity(notification, false);
+        repository.save(entity);
+    }
+
+    @Override
+    public void updateStatusDirectly(String eventId, Notification.Status status) {
         repository.updateStatusDirectly(eventId, status);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<NotificationInbox> findRetryCandidates(LocalDateTime gracePeriod, int maxRetryCount) {
-        List<NotificationInbox> result = new ArrayList<>();
+    public List<Notification> findRetryCandidates(LocalDateTime gracePeriod, int maxRetryCount) {
+        List<NotificationJpaEntity> result = new ArrayList<>();
         result.addAll(repository.findPendingCandidates(gracePeriod));
         result.addAll(repository.findFailedCandidates(maxRetryCount));
 
-        return result;
-    }
-
-    @Override
-    public void incrementRetryCountDirectly(String eventId) {
-        repository.incrementRetryCountDirectly(eventId);
+        return result.stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

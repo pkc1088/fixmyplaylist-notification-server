@@ -1,22 +1,21 @@
 package kafka.kafkaService.email.domain.model;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "notification_inbox", indexes = {
         @Index(name = "idx_status_created_at", columnList = "status, created_at"),  // PENDING 조회용 복합 인덱스
         @Index(name = "idx_status_retry_count", columnList = "status, retry_count") // FAILED 조회용 복합 인덱스
 })
-public class NotificationInbox implements Persistable<String> {
+public class NotificationJpaEntity implements Persistable<String> {
 
     @Id
     @Column(length = 100)
@@ -30,13 +29,13 @@ public class NotificationInbox implements Persistable<String> {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Status status;
+    private Notification.Status status;
 
     @Column(columnDefinition = "JSON")
     private String payload;
 
     @Column(nullable = false)
-    private int retryCount = 0;
+    private int retryCount;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -45,11 +44,8 @@ public class NotificationInbox implements Persistable<String> {
     private LocalDateTime updatedAt;
 
     @Transient
+    @Builder.Default
     private boolean isNew = false;
-
-    public enum Status {
-        PENDING, SUCCESS, FAILED, DEAD
-    }
 
     @Override
     public String getId() {
@@ -65,38 +61,5 @@ public class NotificationInbox implements Persistable<String> {
     @PostPersist
     void markNotNew() {
         this.isNew = false;
-    }
-
-    @Builder
-    public NotificationInbox(
-            String eventId,
-            String userId,
-            String userEmail,
-            String payload
-    ) {
-        this.eventId = eventId;
-        this.userId = userId;
-        this.userEmail = userEmail;
-        this.payload = payload;
-        this.status = Status.PENDING;
-        this.createdAt = LocalDateTime.now();
-        this.isNew = true;
-    }
-
-    public static NotificationInbox create(
-            String eventId,
-            String userId,
-            String userEmail,
-            String payload
-    ) {
-        if (eventId == null || eventId.isBlank()) {
-            throw new IllegalArgumentException("Inbox 생성을 위한 eventId가 누락되었습니다. payload: " + payload);
-        }
-        return NotificationInbox.builder()
-                .eventId(eventId)
-                .userId(userId)
-                .userEmail(userEmail)
-                .payload(payload)
-                .build();
     }
 }

@@ -57,7 +57,7 @@ class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("Success Flow: Inbox save success -> Call Resend API -> Status update to SUCCESS")
+    @DisplayName("Success Flow: Inbox saveIdempotent success -> Call Resend API -> Status updateRetriedNotification to SUCCESS")
     void process_SuccessFlow() throws Exception {
         // given
         doAnswer(invocation -> {
