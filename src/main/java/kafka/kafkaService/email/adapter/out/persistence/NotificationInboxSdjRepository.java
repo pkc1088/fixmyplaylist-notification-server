@@ -1,7 +1,6 @@
 package kafka.kafkaService.email.adapter.out.persistence;
 
 import kafka.kafkaService.email.domain.model.Notification;
-import kafka.kafkaService.email.domain.model.NotificationJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
