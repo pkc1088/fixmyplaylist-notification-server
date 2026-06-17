@@ -2,7 +2,6 @@ package kafka.kafkaService.email.adapter.out.persistence;
 
 import kafka.kafkaService.email.application.port.out.NotificationInboxPort;
 import kafka.kafkaService.email.domain.model.Notification;
-import kafka.kafkaService.email.domain.model.NotificationJpaEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;

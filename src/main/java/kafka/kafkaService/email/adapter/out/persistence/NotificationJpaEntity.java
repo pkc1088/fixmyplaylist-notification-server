@@ -1,6 +1,7 @@
-package kafka.kafkaService.email.domain.model;
+package kafka.kafkaService.email.adapter.out.persistence;
 
 import jakarta.persistence.*;
+import kafka.kafkaService.email.domain.model.Notification;
 import lombok.*;
 import org.springframework.data.domain.Persistable;
 
