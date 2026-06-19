@@ -82,3 +82,20 @@ logging:
           descriptor:
             sql:
               BasicBinder: TRACE
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
+  stackdriver:
+    metrics:
+      export:
+        enabled: false
+        project-id: "dummy"
+        step: 30s
+  metrics:
+    tags:
+      env: "dummy"
+      service: "dummy"
