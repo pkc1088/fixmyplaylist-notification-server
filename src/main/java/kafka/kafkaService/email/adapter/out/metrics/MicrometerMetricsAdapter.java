@@ -9,33 +9,50 @@ import org.springframework.stereotype.Component;
 @Component
 public class MicrometerMetricsAdapter implements NotificationMetricsPort {
 
-    private final DistributionSummary batchSizeSummary;
+    private final DistributionSummary initialBatchSizeSummary;
     private final Counter initialSuccessCounter;
-//    private final Counter retrySuccessCounter;
-//    private final Counter deadLetterCounter;
-//    private final Counter failCounter;
+    private final Counter initialFailCounter;
+
+    private final DistributionSummary retryBatchSizeSummary;
+    private final Counter retrySuccessCounter;
+    private final Counter retryFailCounter;
 
 
     public MicrometerMetricsAdapter(MeterRegistry registry) {
-//        this.retrySuccessCounter = Counter.builder("notification.retry.result")
-//                .tag("outcome", "success")
-//                .register(registry);
-//
-//        this.failCounter = Counter.builder("notification.retry.result")
-//                .tag("outcome", "fail")
-//                .register(registry);
-//
-//        this.deadLetterCounter = Counter.builder("notification.retry.result")
-//                .tag("outcome", "dead_letter")
-//                .register(registry);
+
+        this.initialBatchSizeSummary = DistributionSummary.builder("notification.init.batch.size")
+                .description("이메일 최초 처리한 작업 크기")
+                .register(registry);
 
         this.initialSuccessCounter = Counter.builder("notification.init.result")
                 .tag("outcome", "success")
+                .description("이메일 최초 발송 성공 횟수")
                 .register(registry);
 
-        this.batchSizeSummary = DistributionSummary.builder("notification.init.batch.size")
-                .description("처리한 후보군 크기")
+        this.initialFailCounter = Counter.builder("notification.init.result")
+                .tag("outcome", "fail")
+                .description("이메일 최초 발송 실패 횟수")
                 .register(registry);
+
+
+        this.retryBatchSizeSummary = DistributionSummary.builder("notification.retry.batch.size")
+                .description("이메일 재시도 처리한 작업 크기")
+                .register(registry);
+
+        this.retrySuccessCounter = Counter.builder("notification.retry.result")
+                .tag("outcome", "success")
+                .description("이메일 재시도 발송 성공 횟수")
+                .register(registry);
+
+        this.retryFailCounter = Counter.builder("notification.retry.result")
+                .tag("outcome", "fail")
+                .description("이메일 재시도 발송 실패 횟수")
+                .register(registry);
+    }
+
+    @Override
+    public void recordBatchSize(int size) {
+        initialBatchSizeSummary.record(size);
     }
 
     @Override
@@ -44,22 +61,22 @@ public class MicrometerMetricsAdapter implements NotificationMetricsPort {
     }
 
     @Override
-    public void recordRetryBatchSize(int size) {
-        batchSizeSummary.record(size);
+    public void recordFail() {
+        initialFailCounter.increment();
     }
 
-//    @Override
-//    public void recordRetrySuccess() {
-//        successCounter.increment();
-//    }
-//
-//    @Override
-//    public void recordRetryFail() {
-//        failCounter.increment();
-//    }
-//
-//    @Override
-//    public void recordDeadLetter() {
-//        deadLetterCounter.increment();
-//    }
+    @Override
+    public void recordRetryBatchSize(int size) {
+        retryBatchSizeSummary.record(size);
+    }
+
+    @Override
+    public void recordRetrySuccess() {
+        retrySuccessCounter.increment();
+    }
+
+    @Override
+    public void recordRetryFail() {
+        retryFailCounter.increment();
+    }
 }

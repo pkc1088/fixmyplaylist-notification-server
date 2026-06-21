@@ -25,7 +25,7 @@ public class NotificationService implements NotificationUseCase {
     @Override
     public int processPendingNotifications() {
         // 콜백 전달
-        return messagePullPort.pullAndProcess(new EventProcessor() {
+        int processedCount = messagePullPort.pullAndProcess(new EventProcessor() {
 
             @Override
             public void process(RecoveryCompletedEvent event) throws Exception {
@@ -54,6 +54,9 @@ public class NotificationService implements NotificationUseCase {
                     RecoveryCompletedEvent event = objectMapper.readValue(rawMessage, RecoveryCompletedEvent.class);
 
                     inboxStateService.updateInboxStatusToFailed(event.eventId());
+
+                    notificationMetricsPort.recordFail();
+
                     log.info("Updated Event {} Status To FAILED.", event.eventId());
 
                 } catch (Exception parseException) {
@@ -62,5 +65,9 @@ public class NotificationService implements NotificationUseCase {
                 }
             }
         });
+
+        notificationMetricsPort.recordBatchSize(processedCount);
+
+        return processedCount;
     }
 }
