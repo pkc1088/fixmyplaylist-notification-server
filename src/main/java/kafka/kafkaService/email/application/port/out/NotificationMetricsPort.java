@@ -13,4 +13,6 @@ public interface NotificationMetricsPort {
     void recordRetrySuccess();
 
     void recordRetryFail();
+
+    void recordFinalizeDead();
 }

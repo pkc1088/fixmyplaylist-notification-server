@@ -56,6 +56,8 @@ dependencies {
 	// Micrometer & Cloud Monitor
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-stackdriver'
+	implementation 'com.google.protobuf:protobuf-java:3.25.5'
+	implementation 'com.google.protobuf:protobuf-java-util:3.25.5'
 }
 
 tasks.named('test') {

@@ -9,74 +9,85 @@ import org.springframework.stereotype.Component;
 @Component
 public class MicrometerMetricsAdapter implements NotificationMetricsPort {
 
-    private final DistributionSummary initialBatchSizeSummary;
-    private final Counter initialSuccessCounter;
-    private final Counter initialFailCounter;
+    private final DistributionSummary initialEmailBatchSizeSummary;
+    private final Counter initialEmailSuccessCounter;
+    private final Counter initialEmailFailCounter;
 
-    private final DistributionSummary retryBatchSizeSummary;
-    private final Counter retrySuccessCounter;
-    private final Counter retryFailCounter;
+    private final DistributionSummary retryEmailBatchSizeSummary;
+    private final Counter retryEmailSuccessCounter;
+    private final Counter retryEmailFailCounter;
+    private final Counter emailDeadCounter;
 
 
     public MicrometerMetricsAdapter(MeterRegistry registry) {
 
-        this.initialBatchSizeSummary = DistributionSummary.builder("notification.init.batch.size")
+        this.initialEmailBatchSizeSummary = DistributionSummary.builder("notification.init.batch.size")
                 .description("이메일 최초 처리한 작업 크기")
                 .register(registry);
 
-        this.initialSuccessCounter = Counter.builder("notification.init.result")
+        this.initialEmailSuccessCounter = Counter.builder("notification.init.result")
                 .tag("outcome", "success")
                 .description("이메일 최초 발송 성공 횟수")
                 .register(registry);
 
-        this.initialFailCounter = Counter.builder("notification.init.result")
+        this.initialEmailFailCounter = Counter.builder("notification.init.result")
                 .tag("outcome", "fail")
                 .description("이메일 최초 발송 실패 횟수")
                 .register(registry);
 
 
-        this.retryBatchSizeSummary = DistributionSummary.builder("notification.retry.batch.size")
+        this.retryEmailBatchSizeSummary = DistributionSummary.builder("notification.retry.batch.size")
                 .description("이메일 재시도 처리한 작업 크기")
                 .register(registry);
 
-        this.retrySuccessCounter = Counter.builder("notification.retry.result")
+        this.retryEmailSuccessCounter = Counter.builder("notification.retry.result")
                 .tag("outcome", "success")
                 .description("이메일 재시도 발송 성공 횟수")
                 .register(registry);
 
-        this.retryFailCounter = Counter.builder("notification.retry.result")
+        this.retryEmailFailCounter = Counter.builder("notification.retry.result")
                 .tag("outcome", "fail")
                 .description("이메일 재시도 발송 실패 횟수")
+                .register(registry);
+
+        this.emailDeadCounter = Counter.builder("notification.retry.result")
+                .tag("outcome", "dead")
+                .description("이메일 최종 DEAD 횟수")
                 .register(registry);
     }
 
     @Override
     public void recordBatchSize(int size) {
-        initialBatchSizeSummary.record(size);
+        initialEmailBatchSizeSummary.record(size);
     }
 
     @Override
     public void recordSuccess() {
-        initialSuccessCounter.increment();
+        initialEmailSuccessCounter.increment();
     }
 
     @Override
     public void recordFail() {
-        initialFailCounter.increment();
+        initialEmailFailCounter.increment();
     }
 
     @Override
     public void recordRetryBatchSize(int size) {
-        retryBatchSizeSummary.record(size);
+        retryEmailBatchSizeSummary.record(size);
     }
 
     @Override
     public void recordRetrySuccess() {
-        retrySuccessCounter.increment();
+        retryEmailSuccessCounter.increment();
     }
 
     @Override
     public void recordRetryFail() {
-        retryFailCounter.increment();
+        retryEmailFailCounter.increment();
+    }
+
+    @Override
+    public void recordFinalizeDead() {
+        emailDeadCounter.increment();
     }
 }

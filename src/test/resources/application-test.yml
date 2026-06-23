@@ -2,6 +2,7 @@ server:
   port: 8081
   address: 0.0.0.0
   forward-headers-strategy: framework
+  shutdown: graceful
 
 
 resend:
@@ -23,6 +24,9 @@ app:
 spring:
   application:
     name: kafkaService
+
+  lifecycle:
+    timeout-per-shutdown-phase: 10s
 
   mail:
     host: smtp.gmail.com
@@ -75,6 +79,7 @@ spring:
 
 logging:
   level:
+    io.micrometer.stackdriver.StackdriverMeterRegistry: DEBUG
     org:
       hibernate:
         sql: DEBUG
@@ -94,7 +99,7 @@ management:
       export:
         enabled: false
         project-id: "dummy"
-        step: 30s
+        step: 10s
   metrics:
     tags:
       env: "dummy"
