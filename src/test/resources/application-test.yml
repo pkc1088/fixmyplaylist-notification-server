@@ -3,7 +3,9 @@ server:
   address: 0.0.0.0
   forward-headers-strategy: framework
   shutdown: graceful
-
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
 resend:
   api-key: "dummy"
@@ -99,7 +101,7 @@ management:
       export:
         enabled: false
         project-id: "dummy"
-        step: 10s
+        step: 1m
   metrics:
     tags:
       env: "dummy"

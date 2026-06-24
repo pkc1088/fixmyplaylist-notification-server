@@ -1,5 +1,7 @@
 package kafka.kafkaService.email.adapter.in.web;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.push.PushMeterRegistry;
 import kafka.kafkaService.email.application.port.in.NotificationUseCase;
 import kafka.kafkaService.email.application.port.in.RetryNotificationUseCase;
 import lombok.RequiredArgsConstructor;
@@ -9,14 +11,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.lang.reflect.Method;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/internal/notifications")
 public class NotificationController {
 
-    private final RetryNotificationUseCase retryFailedNotifications;
+    private final RetryNotificationUseCase retryNotificationUseCase;
     private final NotificationUseCase notificationUseCase;
+    private final MeterRegistry meterRegistry;
 
 
     @PostMapping("/recovery-completed")
@@ -24,7 +29,13 @@ public class NotificationController {
 
         log.info("recovery-completed endpoint triggered");
 
-        int count = notificationUseCase.processPendingNotifications();
+        int count;
+
+        try {
+            count = notificationUseCase.processPendingNotifications();
+        } finally {
+            forcePushMetrics();
+        }
 
         log.info("recovery-completed endpoint done");
 
@@ -37,10 +48,30 @@ public class NotificationController {
 
         log.info("retry-failed endpoint triggered by Cloud Scheduler");
 
-        int successCount = retryFailedNotifications.retryFailedNotifications();
+        int successCount;
+
+        try {
+            successCount = retryNotificationUseCase.retryFailedNotifications();
+        } finally {
+            forcePushMetrics();
+        }
 
         log.info("retry-failed endpoint done. Processed {} emails.", successCount);
 
         return ResponseEntity.ok("Successfully retried and sent " + successCount + " emails.");
+    }
+
+    private void forcePushMetrics() {
+        if (meterRegistry instanceof PushMeterRegistry pushRegistry) {
+            try {
+                Method publishMethod = PushMeterRegistry.class.getDeclaredMethod("publish");
+                publishMethod.setAccessible(true);
+                publishMethod.invoke(pushRegistry);
+                log.info("[Task finished: Force push to StackDriver completed]");
+
+            } catch (Exception e) {
+                log.warn("[StackDriver metric forced push failed]", e);
+            }
+        }
     }
 }
