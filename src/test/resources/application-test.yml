@@ -102,6 +102,8 @@ management:
         enabled: false
         project-id: "dummy"
         step: 1m
+        connect-timeout: 3s
+        read-timeout: 3s
   metrics:
     tags:
       env: "dummy"

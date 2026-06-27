@@ -29,13 +29,7 @@ public class NotificationController {
 
         log.info("recovery-completed endpoint triggered");
 
-        int count;
-
-        try {
-            count = notificationUseCase.processPendingNotifications();
-        } finally {
-            forcePushMetrics();
-        }
+        int count = notificationUseCase.processPendingNotifications();
 
         log.info("recovery-completed endpoint done");
 
@@ -48,30 +42,10 @@ public class NotificationController {
 
         log.info("retry-failed endpoint triggered by Cloud Scheduler");
 
-        int successCount;
-
-        try {
-            successCount = retryNotificationUseCase.retryFailedNotifications();
-        } finally {
-            forcePushMetrics();
-        }
+        int successCount = retryNotificationUseCase.retryFailedNotifications();
 
         log.info("retry-failed endpoint done. Processed {} emails.", successCount);
 
         return ResponseEntity.ok("Successfully retried and sent " + successCount + " emails.");
-    }
-
-    private void forcePushMetrics() {
-        if (meterRegistry instanceof PushMeterRegistry pushRegistry) {
-            try {
-                Method publishMethod = PushMeterRegistry.class.getDeclaredMethod("publish");
-                publishMethod.setAccessible(true);
-                publishMethod.invoke(pushRegistry);
-                log.info("[Task finished: Force push to StackDriver completed]");
-
-            } catch (Exception e) {
-                log.warn("[StackDriver metric forced push failed]", e);
-            }
-        }
     }
 }
