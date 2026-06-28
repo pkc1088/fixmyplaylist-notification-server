@@ -1,7 +1,5 @@
 package kafka.kafkaService.email.adapter.in.web;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.push.PushMeterRegistry;
 import kafka.kafkaService.email.application.port.in.NotificationUseCase;
 import kafka.kafkaService.email.application.port.in.RetryNotificationUseCase;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.lang.reflect.Method;
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -21,7 +17,6 @@ public class NotificationController {
 
     private final RetryNotificationUseCase retryNotificationUseCase;
     private final NotificationUseCase notificationUseCase;
-    private final MeterRegistry meterRegistry;
 
 
     @PostMapping("/recovery-completed")

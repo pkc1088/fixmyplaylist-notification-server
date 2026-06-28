@@ -1,4 +1,4 @@
-package kafka.kafkaService.email.adapter.in.web;
+package kafka.kafkaService.global.probe;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.push.PushMeterRegistry;
