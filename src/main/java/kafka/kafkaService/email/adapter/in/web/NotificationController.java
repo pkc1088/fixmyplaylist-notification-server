@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/internal/notifications")
 public class NotificationController {
 
-    private final RetryNotificationUseCase retryFailedNotifications;
+    private final RetryNotificationUseCase retryNotificationUseCase;
     private final NotificationUseCase notificationUseCase;
 
 
@@ -37,7 +37,7 @@ public class NotificationController {
 
         log.info("retry-failed endpoint triggered by Cloud Scheduler");
 
-        int successCount = retryFailedNotifications.retryFailedNotifications();
+        int successCount = retryNotificationUseCase.retryFailedNotifications();
 
         log.info("retry-failed endpoint done. Processed {} emails.", successCount);
 

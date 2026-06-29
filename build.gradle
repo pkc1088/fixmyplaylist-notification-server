@@ -53,6 +53,11 @@ dependencies {
 	// resend
 	implementation 'com.resend:resend-java:3.1.0'
 	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+	// Micrometer & Cloud Monitor
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-registry-stackdriver'
+	implementation 'com.google.protobuf:protobuf-java:3.25.5'
+	implementation 'com.google.protobuf:protobuf-java-util:3.25.5'
 }
 
 tasks.named('test') {

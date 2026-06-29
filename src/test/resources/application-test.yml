@@ -2,7 +2,10 @@ server:
   port: 8081
   address: 0.0.0.0
   forward-headers-strategy: framework
-
+  shutdown: graceful
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
 resend:
   api-key: "dummy"
@@ -23,6 +26,9 @@ app:
 spring:
   application:
     name: kafkaService
+
+  lifecycle:
+    timeout-per-shutdown-phase: 10s
 
   mail:
     host: smtp.gmail.com
@@ -75,6 +81,7 @@ spring:
 
 logging:
   level:
+    io.micrometer.stackdriver.StackdriverMeterRegistry: DEBUG
     org:
       hibernate:
         sql: DEBUG
@@ -82,3 +89,22 @@ logging:
           descriptor:
             sql:
               BasicBinder: TRACE
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
+  stackdriver:
+    metrics:
+      export:
+        enabled: false
+        project-id: "dummy"
+        step: 1m
+        connect-timeout: 3s
+        read-timeout: 3s
+  metrics:
+    tags:
+      env: "dummy"
+      service: "dummy"

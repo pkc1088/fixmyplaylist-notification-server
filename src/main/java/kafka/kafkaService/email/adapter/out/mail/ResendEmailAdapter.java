@@ -4,6 +4,7 @@ import kafka.kafkaService.email.application.port.out.EmailPort;
 import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -11,6 +12,7 @@ import org.springframework.web.client.RestClient;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,11 @@ public class ResendEmailAdapter implements EmailPort {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(payload)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, (request, response) -> {
+                    String errorBody = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                    log.error("Resend API Error! Status: {}, Body: {}", response.getStatusCode(), errorBody);
+                    throw new RuntimeException("Email sending failed: " + errorBody);
+                })
                 .body(String.class);
 
         log.info("[이메일 발송 성공] Resend 응답: {}", responseBody);

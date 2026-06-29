@@ -2,10 +2,7 @@ package kafka.kafkaService.email.application.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.kafkaService.email.application.port.in.NotificationUseCase;
-import kafka.kafkaService.email.application.port.out.DlqPort;
-import kafka.kafkaService.email.application.port.out.EmailPort;
-import kafka.kafkaService.email.application.port.out.EventProcessor;
-import kafka.kafkaService.email.application.port.out.MessagePullPort;
+import kafka.kafkaService.email.application.port.out.*;
 import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificationService implements NotificationUseCase {
 
+    private final NotificationMetricsPort notificationMetricsPort;
     private final InboxStateService inboxStateService;
     private final MessagePullPort messagePullPort;
     private final EmailPort resendEmailAdapter;
@@ -27,7 +25,7 @@ public class NotificationService implements NotificationUseCase {
     @Override
     public int processPendingNotifications() {
         // 콜백 전달
-        return messagePullPort.pullAndProcess(new EventProcessor() {
+        int processedCount = messagePullPort.pullAndProcess(new EventProcessor() {
 
             @Override
             public void process(RecoveryCompletedEvent event) throws Exception {
@@ -43,6 +41,8 @@ public class NotificationService implements NotificationUseCase {
                 resendEmailAdapter.sendRecoveryEmail(event);
 
                 inboxStateService.updateInboxStatusToSuccess(event.eventId());
+
+                notificationMetricsPort.recordSuccess();
             }
 
             @Override
@@ -54,6 +54,9 @@ public class NotificationService implements NotificationUseCase {
                     RecoveryCompletedEvent event = objectMapper.readValue(rawMessage, RecoveryCompletedEvent.class);
 
                     inboxStateService.updateInboxStatusToFailed(event.eventId());
+
+                    notificationMetricsPort.recordFail();
+
                     log.info("Updated Event {} Status To FAILED.", event.eventId());
 
                 } catch (Exception parseException) {
@@ -62,5 +65,9 @@ public class NotificationService implements NotificationUseCase {
                 }
             }
         });
+
+        notificationMetricsPort.recordBatchSize(processedCount);
+
+        return processedCount;
     }
 }
