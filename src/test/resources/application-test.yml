@@ -5,7 +5,7 @@ server:
   shutdown: graceful
   tomcat:
     mbeanregistry:
-      enabled: true
+      enabled: false
 
 resend:
   api-key: "dummy"
@@ -90,12 +90,13 @@ logging:
             sql:
               BasicBinder: TRACE
 
-
 management:
   endpoints:
+    warmup:
+      secret: "dummy"
     web:
       exposure:
-        include: health, metrics
+        include: health
   stackdriver:
     metrics:
       export:
