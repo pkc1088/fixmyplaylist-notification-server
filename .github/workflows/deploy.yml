@@ -1,0 +1,93 @@
+name: Notification Server CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - 'src/main/resources/static/images/assets/**'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ "main" ]
+
+env:
+  PROJECT_ID: youtubeservice-457316
+  REGION: us-central1
+  SERVICE_NAME: notification-service
+  IMAGE_NAME: gcr.io/youtubeservice-457316/notification-service
+
+jobs:
+  # === 단위 & 통합 테스트 (Feature -> Main) ===
+  test:
+    if: >-
+      github.event_name == 'pull_request' && 
+      github.base_ref == 'main' &&
+      !contains(github.event.pull_request.title, '[skip test]')
+    runs-on: ubuntu-latest
+    env:
+      TESTCONTAINERS_RYUK_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Notification Server Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Unit Tests
+        run: ./gradlew test -Dtags=unit --no-daemon
+
+      - name: Run Integration Tests
+        run: ./gradlew test -Dtags=integration --no-daemon --info --stacktrace
+
+  # === 배포 (Main Push) ===
+  deploy:
+    if: >-
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/main' && 
+      !contains(github.event.head_commit.message, '[skip deploy]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Notification Server Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Notification Server Create env.yml
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_YML }}
+        run: |
+          echo "$ENV_CONTENT" > env.yml
+
+      - name: Notification Server Build and Push Image
+        run: |
+          gcloud builds submit --config cloudbuild.yml --substitutions=_IMAGE_NAME=${{ env.IMAGE_NAME }}
+
+      - name: Notification Server Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.IMAGE_NAME }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --no-allow-unauthenticated \
+            --env-vars-file=./env.yml \
+            --concurrency 80 \
+            --min-instances 0 \
+            --max-instances 2 \
+            --timeout=10m \
+            --memory 1Gi \
+            --startup-probe="httpGet.path=/api/internal/warmup/${{ secrets.PROBE_WARMUP_SECRET }},httpGet.port=8080,initialDelaySeconds=15,periodSeconds=15,timeoutSeconds=10,failureThreshold=3"
