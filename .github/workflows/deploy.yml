@@ -90,4 +90,4 @@ jobs:
             --max-instances 2 \
             --timeout=10m \
             --memory 1Gi \
-            --startup-probe="httpGet.path=/api/internal/warmup/${{ secrets.PROBE_WARMUP_SECRET }},httpGet.port=8080,initialDelaySeconds=15,periodSeconds=15,timeoutSeconds=10,failureThreshold=3"
+            --startup-probe="httpGet.path=/api/internal/warmup/${{ secrets.PROBE_WARMUP_SECRET }},httpGet.port=8080,initialDelaySeconds=15,periodSeconds=15,timeoutSeconds=10,failureThreshold=4"
