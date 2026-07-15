@@ -66,7 +66,7 @@
 **Result**: 
 - 필요 시에만 컨테이너가 실행되는 서버리스 이벤트 프로세서 구축해 인프라 비용 최소화.
 
-### 4. Serverless Metrics Collection & Cost Optimization
+### 4. Serverless Metrics Collection(Micrometer & Stackdriver)
 
 **Context:**
 - 동적 인스턴스 생성·소멸이 반복되는 Serverless 환경 특성상, Prometheus와 같은 Pull 기반 모니터링 방식은 부적합.

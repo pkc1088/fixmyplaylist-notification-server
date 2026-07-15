@@ -46,7 +46,7 @@ spring:
   kafka:
     bootstrap-servers: dummy
     properties:
-      security.protocol: SASL_SSL
+      security.protocol: PLAINTEXT # for test
       sasl.mechanism: PLAIN
       sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="dummy" password="dummy";
     consumer:
@@ -60,7 +60,7 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
   datasource:
-    url: jdbc:mysql://localhost:3306/noti?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&rewriteBatchedStatements=true
+    url: jdbc:mysql://localhost:3306/dummy_db
     username: dummy
     password: dummy
     hikari:
@@ -81,7 +81,7 @@ spring:
 
 logging:
   level:
-    io.micrometer.stackdriver.StackdriverMeterRegistry: DEBUG
+    io.micrometer.stackdriver: ERROR
     org:
       hibernate:
         sql: DEBUG

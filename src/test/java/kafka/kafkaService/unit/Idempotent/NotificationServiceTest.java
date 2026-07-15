@@ -1,15 +1,13 @@
 package kafka.kafkaService.unit.Idempotent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kafka.kafkaService.email.application.port.out.DlqPort;
-import kafka.kafkaService.email.application.port.out.EmailPort;
-import kafka.kafkaService.email.application.port.out.EventProcessor;
-import kafka.kafkaService.email.application.port.out.MessagePullPort;
+import kafka.kafkaService.email.application.port.out.*;
 import kafka.kafkaService.email.application.service.InboxStateService;
 import kafka.kafkaService.email.application.service.NotificationService;
 import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +23,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
+@Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
 
@@ -39,6 +38,9 @@ class NotificationServiceTest {
 
     @Mock
     private InboxStateService inboxStateService;
+
+    @Mock
+    private NotificationMetricsPort notificationMetricsPort;
 
     @Mock
     private ObjectMapper objectMapper;

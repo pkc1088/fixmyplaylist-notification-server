@@ -53,6 +53,14 @@ dependencies {
 	// resend
 	implementation 'com.resend:resend-java:3.1.0'
 	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+	// log
+	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+	// TestContainer
+	testImplementation platform('org.testcontainers:testcontainers-bom:2.0.2')
+	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+	testImplementation 'org.testcontainers:testcontainers-mysql'
+	testImplementation 'org.testcontainers:testcontainers-kafka' // TestContainer - Kafka
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	// Micrometer & Cloud Monitor
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-stackdriver'
@@ -60,8 +68,16 @@ dependencies {
 	implementation 'com.google.protobuf:protobuf-java-util:3.25.5'
 }
 
+ext {
+	set('testcontainers.version', '2.0.2')
+}
+
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform {
+		if (System.getProperty('tags') != null) {
+			includeTags System.getProperty('tags')
+		}
+	}
 }
 
 tasks.named('bootJar') {
