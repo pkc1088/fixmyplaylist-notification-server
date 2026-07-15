@@ -1,10 +1,7 @@
 package kafka.kafkaService.unit.Idempotent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kafka.kafkaService.email.application.port.out.DlqPort;
-import kafka.kafkaService.email.application.port.out.EmailPort;
-import kafka.kafkaService.email.application.port.out.EventProcessor;
-import kafka.kafkaService.email.application.port.out.MessagePullPort;
+import kafka.kafkaService.email.application.port.out.*;
 import kafka.kafkaService.email.application.service.InboxStateService;
 import kafka.kafkaService.email.application.service.NotificationService;
 import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
@@ -41,6 +38,9 @@ class NotificationServiceTest {
 
     @Mock
     private InboxStateService inboxStateService;
+
+    @Mock
+    private NotificationMetricsPort notificationMetricsPort;
 
     @Mock
     private ObjectMapper objectMapper;
