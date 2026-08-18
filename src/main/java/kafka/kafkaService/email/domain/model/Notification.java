@@ -33,6 +33,8 @@ public class Notification {
     private static final int MAX_USER_ID_LENGTH = 255;
     private static final int MAX_EMAIL_LENGTH = 255;
 
+    public static final int MAX_RETRY_COUNT = 3;
+
 
     @Builder(access = AccessLevel.PRIVATE)
     private Notification(
@@ -82,6 +84,7 @@ public class Notification {
                 .userId(userId)
                 .userEmail(userEmail)
                 .payload(payload)
+                .retryCount(0)
                 .build();
     }
 
@@ -113,19 +116,13 @@ public class Notification {
         validate();
     }
 
-    public void handleFailure(int maxRetryCount) {
-        if (this.retryCount >= maxRetryCount - 1) {
+    public void handleFailure() {
+        if (this.retryCount >= MAX_RETRY_COUNT - 1) {
             this.status = Status.DEAD;
         } else {
             this.status = Status.FAILED;
             this.retryCount++;
         }
-        this.updatedAt = LocalDateTime.now();
-        validate();
-    }
-
-    public void markAsDead() {
-        this.status = Status.DEAD;
         this.updatedAt = LocalDateTime.now();
         validate();
     }

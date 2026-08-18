@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.kafkaService.email.application.port.in.NotificationUseCase;
 import kafka.kafkaService.email.application.port.out.*;
 import kafka.kafkaService.email.application.port.out.dto.RecoveryCompletedEvent;
+import kafka.kafkaService.email.domain.model.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 
 @Slf4j
 @Service
@@ -23,13 +25,12 @@ public class NotificationService implements NotificationUseCase {
 
 
     @Override
-    public int processPendingNotifications() {
+    public int processNotifications() {
         // 콜백 전달
-        int processedCount = messagePullPort.pullAndProcess(new EventProcessor() {
+        int consumedCount = messagePullPort.pullAndProcess(new EventProcessor() {
 
             @Override
             public void process(RecoveryCompletedEvent event) throws Exception {
-
                 String payloadJson = objectMapper.writeValueAsString(event);
 
                 boolean isNewEvent = inboxStateService.saveToInboxIdempotent(event, payloadJson);
@@ -37,37 +38,67 @@ public class NotificationService implements NotificationUseCase {
                     log.warn("Event {} already processed. Skipping.", event.eventId());
                     return;
                 }
-
-                resendEmailAdapter.sendRecoveryEmail(event);
-
-                inboxStateService.updateInboxStatusToSuccess(event.eventId());
-
-                notificationMetricsPort.recordSuccess();
             }
 
             @Override
             public void onFail(String rawMessage) {
-                // 실패 처리 로직(DLQ)
                 dlqPort.sendToDlq(rawMessage);
-
-                try {
-                    RecoveryCompletedEvent event = objectMapper.readValue(rawMessage, RecoveryCompletedEvent.class);
-
-                    inboxStateService.updateInboxStatusToFailed(event.eventId());
-
-                    notificationMetricsPort.recordFail();
-
-                    log.info("Updated Event {} Status To FAILED.", event.eventId());
-
-                } catch (Exception parseException) {
-
-                    log.warn("ParseException during DLQ processing: {}", parseException.getMessage());
-                }
             }
         });
 
-        notificationMetricsPort.recordBatchSize(processedCount);
+        log.info("Kafka 신규 수신 및 Inbox 적재: {}건", consumedCount);
 
-        return processedCount;
+
+        List<Notification> targetNotifications = inboxStateService.findPendingOrFailedCandidates();
+        if (targetNotifications.isEmpty()) return 0;
+
+        int initialCount = 0;
+        int retryCount = 0;
+
+        for (Notification notification : targetNotifications) {
+            boolean isInitial = (notification.getRetryCount() == 0);
+
+            try {
+                RecoveryCompletedEvent event = objectMapper.readValue(notification.getPayload(), RecoveryCompletedEvent.class);
+
+                resendEmailAdapter.sendRecoveryEmail(event);
+
+                notification.markAsSuccess();
+                recordSuccessMetrics(isInitial);
+
+            } catch (Exception e) {
+
+                notification.handleFailure();
+                recordFailMetrics(isInitial, notification.getStatus());
+
+                log.warn("Email 발송 실패: eventId={}, currentStatus={}", notification.getEventId(), notification.getStatus(), e);
+            }
+
+            inboxStateService.updateNotification(notification);
+
+            if (isInitial) initialCount++;
+            else retryCount++;
+        }
+
+
+        notificationMetricsPort.recordBatchSize(initialCount);
+        if (retryCount > 0) notificationMetricsPort.recordRetryBatchSize(retryCount);
+
+        return targetNotifications.size();
+    }
+
+
+    private void recordSuccessMetrics(boolean isInitial) {
+        if (isInitial) notificationMetricsPort.recordSuccess();
+        else notificationMetricsPort.recordRetrySuccess();
+    }
+
+    private void recordFailMetrics(boolean isInitial, Notification.Status currentStatus) {
+        if (currentStatus == Notification.Status.DEAD) {
+            notificationMetricsPort.recordFinalizeDead();
+        } else {
+            if (isInitial) notificationMetricsPort.recordFail();
+            else notificationMetricsPort.recordRetryFail();
+        }
     }
 }
