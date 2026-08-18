@@ -102,7 +102,7 @@ management:
       export:
         enabled: false
         project-id: "dummy"
-        step: 1m
+        step: 3m
         connect-timeout: 3s
         read-timeout: 3s
   metrics:
