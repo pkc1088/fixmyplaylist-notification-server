@@ -21,11 +21,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @Tag("integration")
@@ -84,77 +85,63 @@ public class NotificationFatalErrorRetryIntegrationTest extends IntegrationTestS
     }
 
     @Test
-    @DisplayName("If an error occurs mid-batch, the commit is skipped, and successfully processed events are not re-sent on re-polling")
-    void fatalErrorSkipsCommit_andRePollSkipsAlreadySucceededEvent() throws Exception {
+    @DisplayName("If an error occurs mid-batch during processing, Kafka is already committed, but unprocessed events safely wait in DB as PENDING")
+    void fatalErrorInterruptsProcessing_andNextDBPollResumes() throws Exception {
         // given:
         String evt1Id = UUID.randomUUID().toString();
         String evt2Id = UUID.randomUUID().toString();
         String evt3Id = UUID.randomUUID().toString();
 
-        RecoveryCompletedEvent event1 = sampleEvent(evt1Id);
-        RecoveryCompletedEvent event2 = sampleEvent(evt2Id);
-        RecoveryCompletedEvent event3 = sampleEvent(evt3Id);
+        produce(sampleEvent(evt1Id));
+        produce(sampleEvent(evt2Id));
+        produce(sampleEvent(evt3Id));
 
-        produce(event1);
-        produce(event2);
-        produce(event3);
+        AtomicInteger processCount = new AtomicInteger(0);
+        doAnswer(invocation -> {
+            int current = processCount.incrementAndGet();
+            if (current == 2) {
+                // 2번째로 처리되는 이벤트에서 Error 발생(Exception 아님)
+                throw new NoClassDefFoundError("Simulated Cloud Run cold-start linkage error");
+            }
+            return null;
+        }).when(emailPort).sendRecoveryEmail(any());
 
-        // evt-2 처리 시에만 Error(Exception 아님) 발생 스텁
-        doNothing().when(emailPort)
-                .sendRecoveryEmail(argThat(e -> e.eventId().equals(evt1Id)));
-
-        doThrow(new NoClassDefFoundError("Simulated Cloud Run cold-start linkage error"))
-                .when(emailPort)
-                .sendRecoveryEmail(argThat(e -> e.eventId().equals(evt2Id)));
-
-        // when: 최초 처리 시도 -> evt-2 Error 로 프로세스 중단
+        // when 1차 시도: 수신(3건 Inbox PENDING 저장 및 Kafka 커밋) -> 2번째 메일 발송 중 뻗음
         Assertions.assertThrows(
                 NoClassDefFoundError.class,
-                () -> notificationUseCase.processPendingNotifications()
+                () -> notificationUseCase.processNotifications()
         );
 
-        // then:
-        assertInboxStatus(evt1Id, Notification.Status.SUCCESS);
-        assertInboxStatus(evt2Id, Notification.Status.PENDING);
-        Assertions.assertTrue(
-                inboxRepository.findById(evt3Id).isEmpty(),
-                "evt-3 should not yet exist in the Inbox because batch processing was interrupted"
-        );
+        // then 1차 검증:
+        List<NotificationJpaEntity> allInboxes = inboxRepository.findAll();
+
+        long successCount = allInboxes.stream().filter(e -> e.getStatus() == Notification.Status.SUCCESS).count();
+        long pendingCount = allInboxes.stream().filter(e -> e.getStatus() == Notification.Status.PENDING).count();
+
+        // 1개는 성공, 2개는 실패
+        Assertions.assertEquals(1, successCount, "One event should be successfully processed");
+        Assertions.assertEquals(2, pendingCount, "Two events should remain PENDING");
+        Assertions.assertEquals(3, allInboxes.size(), "All 3 events MUST exist in Inbox (Kafka ingestion succeeded)");
 
         verify(dlqPort, never()).sendToDlq(any());
 
-
-        // 재폴링 시뮬레이션 (새 컨테이너가 뜬 상황)
-
+        // ============================================
+        // Step 2. 재시도
+        // ============================================
 
         reset(emailPort);
         doNothing().when(emailPort).sendRecoveryEmail(any());
 
-        // when: 재시도
-        notificationUseCase.processPendingNotifications();
+        // when 2차 시도: DB 에서 PENDING 인 2건만 읽어와서 발송
+        notificationUseCase.processNotifications();
 
-        // then: evt-1은 멱등성에 의해 중복 발송 스킵
-        verify(emailPort, never())
-                .sendRecoveryEmail(argThat(e -> e.eventId().equals(evt1Id)));
+        // then 2차 검증:
+        verify(emailPort, times(2)).sendRecoveryEmail(any());
 
-        // evt-3은 정상 발송 및 성공 처리
-        verify(emailPort, times(1))
-                .sendRecoveryEmail(argThat(e -> e.eventId().equals(evt3Id)));
+        long finalSuccessCount = inboxRepository.findAll().stream()
+                .filter(e -> e.getStatus() == Notification.Status.SUCCESS).count();
 
-        assertInboxStatus(evt3Id, Notification.Status.SUCCESS);
-
-        // evt-2는 PK 중복으로 스킵되니까 PENDING 상태 유지 (스케줄러 Retry 대상)
-        verify(emailPort, never())
-                .sendRecoveryEmail(argThat(e -> e.eventId().equals(evt2Id)));
-
-        assertInboxStatus(evt2Id, Notification.Status.PENDING);
-    }
-
-    private void assertInboxStatus(String eventId, Notification.Status expected) {
-        NotificationJpaEntity entity = inboxRepository.findById(eventId)
-                .orElseThrow(() -> new AssertionError("Inbox should contain " + eventId));
-
-        Assertions.assertEquals(expected, entity.getStatus(), "Unexpected status for " + eventId);
+        Assertions.assertEquals(3, finalSuccessCount, "All events should eventually be SUCCESS");
     }
 
     private RecoveryCompletedEvent sampleEvent(String eventId) {

@@ -8,8 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Component
@@ -34,14 +35,9 @@ public class InboxStateService {
     }
 
 
-    @Retryable(
-            retryFor = {Exception.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 3000)
-    )
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateInboxStatusToSuccess(String eventId) {
-        notificationInboxPort.updateStatusDirectly(eventId, Notification.Status.SUCCESS);
+    @Transactional(readOnly = true)
+    public List<Notification> findPendingOrFailedCandidates() {
+        return notificationInboxPort.findPendingOrFailedCandidates();
     }
 
 
@@ -50,8 +46,8 @@ public class InboxStateService {
             maxAttempts = 3,
             backoff = @Backoff(delay = 3000)
     )
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateInboxStatusToFailed(String eventId) {
-        notificationInboxPort.updateStatusDirectly(eventId, Notification.Status.FAILED);
+    @Transactional
+    public void updateNotification(Notification notification) {
+        notificationInboxPort.updateNotification(notification);
     }
 }

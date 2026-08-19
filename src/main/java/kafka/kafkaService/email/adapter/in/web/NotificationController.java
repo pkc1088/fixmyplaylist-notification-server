@@ -1,7 +1,6 @@
 package kafka.kafkaService.email.adapter.in.web;
 
 import kafka.kafkaService.email.application.port.in.NotificationUseCase;
-import kafka.kafkaService.email.application.port.in.RetryNotificationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/internal/notifications")
 public class NotificationController {
 
-    private final RetryNotificationUseCase retryNotificationUseCase;
     private final NotificationUseCase notificationUseCase;
 
 
@@ -24,23 +22,10 @@ public class NotificationController {
 
         log.info("recovery-completed endpoint triggered");
 
-        int count = notificationUseCase.processPendingNotifications();
+        int count = notificationUseCase.processNotifications();
 
         log.info("recovery-completed endpoint done");
 
         return ResponseEntity.ok("Successfully processed and sent " + count + " emails.");
-    }
-
-
-    @PostMapping("/retry-failed")
-    public ResponseEntity<String> handleRetryTrigger() {
-
-        log.info("retry-failed endpoint triggered by Cloud Scheduler");
-
-        int successCount = retryNotificationUseCase.retryFailedNotifications();
-
-        log.info("retry-failed endpoint done. Processed {} emails.", successCount);
-
-        return ResponseEntity.ok("Successfully retried and sent " + successCount + " emails.");
     }
 }

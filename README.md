@@ -15,15 +15,14 @@
 
 - **Language**: Java 17
 - **Framework**: Spring Boot 3.4.4
-- **Infra**: Google Cloud Run, Cloud SQL
-- **Database**: MySQL
-- **Persistence**: Spring Data JPA, JPQL, JDBC
-- **Message Broker**: Apache Kafka (Confluent Cloud)
-- **Monitoring**: Micrometer, Stackdriver, Google Cloud Monitoring
-- **Scheduler**: Google Cloud Scheduler
-- **Security**: GCP IAM (OIDC Token)
-- **Email**: Resend API (Prod), GMail (Test)
-- **Template Engine**: Thymeleaf
+- **Database**: MySQL 8.0
+- **Persistence**: Spring Data JPA, JPQL
+- **Message**: Apache Kafka
+- **Infra**: Google Cloud Run, Cloud SQL, Confluent Cloud, Google Cloud Scheduler
+- **Monitoring/Alert**: Micrometer, Stackdriver, Google Cloud Monitoring, Google Cloud Mobile App
+- **CI/CD**: GitHub Actions, Git Flow, Kaniko, TestContainers, Docker
+- **APIs**: Resend API
+- **Frontend**: Thymeleaf
 
 ---
 ## Architecture Design
