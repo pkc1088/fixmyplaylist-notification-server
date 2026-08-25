@@ -14,10 +14,10 @@
 ## Architecture & Tech Stack
 
 - **Language**: Java 17
-- **Framework**: Spring Boot 3.4.4
+- **Framework**: Spring Boot 3.4
 - **Database**: MySQL 8.0
 - **Persistence**: Spring Data JPA, JPQL
-- **Message**: Apache Kafka
+- **Message Broker**: Apache Kafka
 - **Infra**: Google Cloud Run, Cloud SQL, Confluent Cloud, Google Cloud Scheduler
 - **Monitoring/Alert**: Micrometer, Stackdriver, Google Cloud Monitoring, Google Cloud Mobile App
 - **CI/CD**: GitHub Actions, Git Flow, Kaniko, TestContainers, Docker

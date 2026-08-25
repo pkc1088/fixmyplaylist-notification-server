@@ -74,7 +74,13 @@ public class NotificationService implements NotificationUseCase {
                 log.warn("Email 발송 실패: eventId={}, currentStatus={}", notification.getEventId(), notification.getStatus(), e);
             }
 
-            inboxStateService.updateNotification(notification);
+            try {
+                inboxStateService.updateNotification(notification);
+
+            } catch (Exception e) {
+
+                log.error("[DB 업데이트 실패] 다음 건으로 넘어갑니다. recoveryId={}", notification.getEventId(), e);
+            }
 
             if (isInitial) initialCount++;
             else retryCount++;
